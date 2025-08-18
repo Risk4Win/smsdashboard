@@ -45,7 +45,7 @@ export function Sidebar({
 
   const studentLinks = [
     { href: `/${role}/classes`, label: 'Classes', icon: BookOpen },
-    { href: `/${role}/exams`, label: 'Exams', icon: Calendar },
+    { href: `/${role}/results`, label: 'Results', icon: Calendar },
     { href: `/${role}/grades`, label: 'Grades', icon: BookOpen },
     { href: `/${role}/attendance`, label: 'Attendance', icon: Users },
   ];

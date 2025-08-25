@@ -44,7 +44,6 @@ export function Sidebar({
   ];
 
   const studentLinks = [
-    { href: `/${role}/classes`, label: 'Classes', icon: BookOpen },
     { href: `/${role}/results`, label: 'Results', icon: Calendar },
     { href: `/${role}/attendance`, label: 'Attendance', icon: Users },
   ];

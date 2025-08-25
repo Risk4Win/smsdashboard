@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import {
   Card,
@@ -20,6 +21,16 @@ import {
   Award,
   AlertCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Types
+type GradeRecord = {
+  id: number;
+  subject: string;
+  grade: string;
+  percentage: number;
+  examDate?: string;
+};
 
 const studentStats = [
   {
@@ -62,16 +73,11 @@ const upcomingEvents = [
   { id: 3, title: 'History Assignment Due', date: 'Friday', time: '11:59 PM', type: 'assignment' },
 ];
 
-const recentGrades = [
-  { subject: 'Mathematics', grade: 'A', percentage: 92 },
-  { subject: 'Physics', grade: 'A-', percentage: 88 },
-  { subject: 'Chemistry', grade: 'B+', percentage: 85 },
-  { subject: 'English', grade: 'A', percentage: 94 },
-];
-
 export default function StudentDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [recentGrades, setRecentGrades] = useState<GradeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const currentUser = localStorage.getItem('user');
@@ -89,6 +95,51 @@ export default function StudentDashboard() {
     }
 
     setUser(userData);
+
+    const fetchGrades = async () => {
+      try {
+        // 1. get student record by userId
+        const studentRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/students?filters[user][id][$eq]=${userData.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const student = studentRes.data.data?.[0];
+        if (!student) {
+          toast.error('Student record not found');
+          return;
+        }
+
+        const studentId = student.documentId;
+
+        // 2. get recent exam results for this student
+        const gradesRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/exam-results?filters[student][documentId][$eq]=${studentId}&sort=examDate:desc&pagination[limit]=5`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const results = gradesRes.data.data.map((item: any) => ({
+          id: item.id,
+          subject: item.Subject || 'Unknown',
+          grade: item.grade || '-',
+          percentage: item.totalMarks || 0,
+          examDate: item.examDate,
+        }));
+
+        setRecentGrades(results || []);
+      } catch (error) {
+        console.error('Recent grades fetch error:', error);
+        toast.error('Failed to fetch recent grades');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGrades();
   }, [router]);
 
   const getGradeColor = (grade: string) => {
@@ -105,7 +156,7 @@ export default function StudentDashboard() {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">Student Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user.name}</p>
+          <p className="text-muted-foreground">Welcome back, {user.username}</p>
         </div>
 
         {/* Stats */}
@@ -166,20 +217,26 @@ export default function StudentDashboard() {
               <CardDescription>Your latest academic performance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentGrades.map((grade) => (
-                <div key={grade.subject} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{grade.subject}</span>
-                    <span className={`font-bold ${getGradeColor(grade.grade)}`}>
-                      {grade.grade}
-                    </span>
+              {loading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : recentGrades.length === 0 ? (
+                <p className="text-muted-foreground">No recent grades found.</p>
+              ) : (
+                recentGrades.map((grade) => (
+                  <div key={grade.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{grade.subject}</span>
+                      <span className={`font-bold ${getGradeColor(grade.grade)}`}>
+                        {grade.grade}
+                      </span>
+                    </div>
+                    <Progress value={grade.percentage} className="h-2" />
+                    <div className="text-right text-sm text-muted-foreground">
+                      {grade.percentage}%
+                    </div>
                   </div>
-                  <Progress value={grade.percentage} className="h-2" />
-                  <div className="text-right text-sm text-muted-foreground">
-                    {grade.percentage}%
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

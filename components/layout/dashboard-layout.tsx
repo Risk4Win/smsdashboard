@@ -3,6 +3,8 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
+import { Analytics } from "@vercel/analytics/next"
+
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -24,7 +26,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <Sidebar role={role} collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6">{children}
+          <Analytics />
+        </main>
       </div>
     </div>
   );

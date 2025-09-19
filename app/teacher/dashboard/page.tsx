@@ -31,7 +31,7 @@ export default function TeacherDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const userRaw = localStorage.getItem('user');
 
     if (!token || !userRaw) {
@@ -61,11 +61,12 @@ export default function TeacherDashboard() {
   const fetchDashboard = async (teacherId: string, token: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/teachers?filters[documentId][$eq]=${teacherId}&populate=subjects,classes.students,exam-results`,
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/teachers?filters[documentId][$eq]=${teacherId}&populate=*`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       const data = await res.json();
       const teacher = data.data?.[0];
 
@@ -74,12 +75,12 @@ export default function TeacherDashboard() {
         return;
       }
 
-      const subjects = teacher.subjects || [];
-      const classes = teacher.classes || [];
+      const subjects = teacher.subject || [];
+      const classes = teacher.class || [];
       const examResults = teacher.exam_results || [];
 
       const allStudents = Array.isArray(classes)
-        ? classes.flatMap((cls: any) => cls?.students || [])
+        ? classes.flatMap((cls: any) => cls.students || [])
         : [];
 
       const pendingExams = Array.isArray(examResults)
@@ -90,7 +91,7 @@ export default function TeacherDashboard() {
         students: allStudents.length,
         classesToday: classes.length,
         pendingExams: pendingExams.length,
-        subjects: subjects.map((s: any) => s.name),
+        subjects: subjects.map((sub: any) => sub.name || 'Unknown'),
       });
 
       const schedule = classes.map((cls: any, i: number) => ({

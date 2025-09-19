@@ -48,7 +48,7 @@ export default function TeacherAttendancePage() {
         )
 
         const teacher = teacherRes.data?.data?.[0]
-        const classStudents = teacher?.class?.students || []
+        const classStudents = teacher.class.students || []
         setStudents(classStudents)
 
         // Init attendance with all true (present)

@@ -94,7 +94,7 @@ export default function StudentAttendancePage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
+      <div className="p-6" >
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>My Attendance</CardTitle>
@@ -109,10 +109,9 @@ export default function StudentAttendancePage() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w- auto p-0" align="start" >
                 <Calendar
                   mode="range"
-                  selected={dateRange}
                   onSelect={setDateRange}
                   numberOfMonths={2}
                   initialFocus
